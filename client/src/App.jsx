@@ -18,9 +18,9 @@ function App() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        console.log("API_BASE_URL", API_BASE_URL);
+        console.log("API_BASE_URL", VITE_API_BASE_URL);
 
-       const res = await axios.get(`${API_BASE_URL}/api/events`);
+       const res = await axios.get(`${VITE_API_BASE_URL}/events`);
         console.log("Events data from api  : ", res.data);
         setEvents(res.data);
       } catch (error) {
@@ -30,7 +30,7 @@ function App() {
       }
     };
     fetchEvents();
-  }, [API_BASE_URL]);
+  }, [VITE_API_BASE_URL]);
 
   const handleGetTickets = (event) => {
     setSelectedEvent(event);
@@ -44,7 +44,7 @@ function App() {
 
   const handleEmailSubmit = async (email) => {
     try {
-      await axios.post(`${API_BASE_URL}/api/subscribe`, {
+      await axios.post(`${VITE_API_BASE_URL}/subscribe`, {
         email,
         eventLink: selectedEvent.url,
       });

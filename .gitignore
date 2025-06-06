@@ -1,0 +1,18 @@
+# Node modules
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build output
+client/dist/
+client/build/
+server/dist/
+
+# Secrets
+.env
+client/.env
+server/.env
+
+# IDE/editor/system files
+.vscode/
+.DS_Store

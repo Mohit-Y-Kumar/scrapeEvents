@@ -8,9 +8,9 @@ const EventCard = ({ event, onGetTickets }) => {
         <h2 className="text-2xl font-bold text-gray-800 mb-2">{event.title}</h2>
         
 
-        {event.date && (
+        {event.dateTime && (
           <p className="text-sm text-gray-500 mb-1">
-            📅 <span className="font-medium">{event.date}</span>
+            📅 <span className="font-medium">{event.dateTime}</span>
           </p>
         )}
 

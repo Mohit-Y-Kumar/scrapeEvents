@@ -1,58 +1,85 @@
 const puppeteer = require("puppeteer");
-console.log("📁 scrapeEvents.js module loaded"); 
+console.log("📁 scrapeEvents.js module loaded");
 
 const scrapeEvents = async () => {
-   console.log("🚀 scrapeEvents() function CALLED");
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-  console.log("🧭 Puppeteer browser launched");
+  console.log("🟡 Launching browser...");
 
-  const page = await browser.newPage();
-  await page.goto("https://www.eventbrite.com.au/d/australia--sydney/events/", {
-    waitUntil: "networkidle2",
-  });
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: true, // more stable than "new"
+      ignoreHTTPSErrors: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--window-size=1920x1080"
+      ],
+    });
 
-  await page.waitForSelector("a.event-card-link", { timeout: 10000 });
+    console.log("✅ Browser launched");
 
-  // Scrape all data and filter properly
-  const rawEvents = await page.$$eval("a.event-card-link", (links) =>
-    links.map((link) => {
+    const page = await browser.newPage();
+    await page.goto("https://www.eventbrite.com.au/d/australia--sydney/events/", {
+      waitUntil: "networkidle2",
+      timeout: 0, // avoid premature timeout
+    });
 
-      const title = link.querySelector("h3")?.innerText?.trim();
-      const dateTime = link.querySelector(".date-info__full-datetime")?.innerText?.trim() || "";
+    console.log("✅ Page loaded");
 
-      const description = link.querySelector(".eds-event-card-content__sub")?.innerText?.trim() || "";
-        const imageUrl =
-      link.querySelector("picture img")?.src ||
-      link.querySelector("img")?.src ||
-      "";
-      return {
-        title: title || "", // fallback empty string
-        url: link.href,
-        location: link.getAttribute("data-event-location") || "",
-        category: link.getAttribute("data-event-category") || "",
-        paidStatus: link.getAttribute("data-event-paid-status") || "",
-        dateTime,
-        description,
-        imageUrl,
-        
-      };
-    })
-  );
+    await page.waitForSelector("a.event-card-link", { timeout: 10000 });
+    console.log("✅ Selector found");
 
-  // Filter out items without title
-  const eventsWithTitle = rawEvents.filter((event) => event.title);
+ const rawEvents = await page.$$eval("a.event-card-link", (links) =>
+  links.map((link) => {
+    const title = link.querySelector("h3")?.innerText?.trim() || "";
 
-  // Remove duplicates based on URL
-  const uniqueEvents = eventsWithTitle.filter(
-    (event, index, self) =>
-      index === self.findIndex((e) => e.url === event.url)
-  );
+    const dateTime =
+      link.querySelector(".eds-text-bs--fixed")?.innerText?.trim() ||
+      link.querySelector("time")?.innerText?.trim() || "";
 
-  await browser.close();
-  return uniqueEvents;
+    const description =
+      link.querySelector(".eds-event-card-content__sub")?.innerText?.trim() ||
+      link.querySelector(".eds-event-card-content__content__principal")?.innerText?.trim() || "";
+
+    const imageUrl =
+      link.querySelector("img")?.getAttribute("src") ||
+      link.querySelector("picture img")?.getAttribute("src") || "";
+
+    return {
+      title,
+      url: link.href,
+      location: link.getAttribute("data-event-location") || "",
+      category: link.getAttribute("data-event-category") || "",
+      paidStatus: link.getAttribute("data-event-paid-status") || "",
+      dateTime,
+      description,
+      imageUrl,
+    };
+  })
+);
+
+
+
+    const eventsWithTitle = rawEvents.filter((event) => event.title);
+    const uniqueEvents = eventsWithTitle.filter(
+      (event, index, self) => index === self.findIndex((e) => e.url === event.url)
+    );
+
+    console.log(`✅ Scraped ${uniqueEvents.length} events`);
+    await browser.close();
+    return uniqueEvents;
+
+  } catch (error) {
+    console.error("❌ Error scraping events:", error);
+
+    if (browser) {
+      await browser.close();
+    }
+
+    throw error; // this will trigger the 500 response in your Express route
+  }
 };
 
 module.exports = scrapeEvents;

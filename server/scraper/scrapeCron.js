@@ -1,6 +1,5 @@
 const cron = require('node-cron');
-const scrapeEvents = require('./scrapeEvents'); 
-const Event = require('./models/Event'); // Your Mongoose model
+const Event = require('../models/Event'); // Your Mongoose model
 
 // Run every 5 minutes
 cron.schedule('*/5 * * * *', async () => {  

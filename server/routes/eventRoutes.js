@@ -1,7 +1,7 @@
 // routes/eventRoutes.js
 const express = require("express");
 const router = express.Router();
-const Subscription = require("../models/subscription");
+const Subscription = require("../models/Event");
 
 // GET from DB instead of scraping
 router.get("/events", async (req, res) => {

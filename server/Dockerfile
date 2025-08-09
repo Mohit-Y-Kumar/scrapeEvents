@@ -1,7 +1,7 @@
-# Use the official Node.js image
+# Use official Node.js 18 slim image
 FROM node:18-slim
 
-# Puppeteer-specific dependencies
+# Install system dependencies for Chromium
 RUN apt-get update && apt-get install -y \
     wget \
     ca-certificates \
@@ -22,25 +22,22 @@ RUN apt-get update && apt-get install -y \
     libxss1 \
     libxtst6 \
     --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
 
-# Copy server files
-COPY . .
+# Copy only package files first for better build caching
+COPY package*.json ./
 
-# Install dependencies
+# Install dependencies (this will now download Chromium)
 RUN npm install
 
-# Set environment variable for Puppeteer to skip downloading Chromium
-ENV PUPPETEER_SKIP_DOWNLOAD=true
+# Copy the rest of the application
+COPY . .
 
-# Install Puppeteer
-RUN npm install puppeteer
-
-# Expose the port your server runs on
+# Expose your server port
 EXPOSE 4000
 
-# Start your server
+# Start the server
 CMD ["node", "server.js"]
